@@ -1,8 +1,18 @@
+/*
+ *
+ * CSPL
+ * Simple Pairs Language, in C
+ *
+ * Simple Pairs Language is a config language of simple string pairs
+ * this is an implementation in C
+ *
+ * */
 
 #ifndef _CSPL_H
 #define _CSPL_H
 
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #define MAX_LINE_SIZE 256
 #define COMMENT '#'
@@ -36,6 +46,8 @@ double cspl_getf(cspl_t* cspl, const char* key);
 
 // get the latest error
 int cspl_err();
+// get and print the latest error
+int cspl_perr(const char* s);
 
 
 #endif /* _CSPL_H */

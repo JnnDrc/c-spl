@@ -1,6 +1,7 @@
 CC := gcc
 AR := ar rcs
 CFLAGS := -Wall -Wextra -O3
+DBGCFLAGS := -Wall -Wextra -O0 -g
 
 TARGET := libcspl.a
 OBJ := cspl.o
@@ -15,7 +16,7 @@ cspl.o: cspl.c
 .PHONY: test clean debug
 
 debug:
-	$(CC) -c -g -o cspl.o cspl.c $(CFLAGS)
+	$(CC) -c -o cspl.o cspl.c $(DBGCFLAGS)
 	$(AR) libcspl-g.a cspl.o
 
 test:

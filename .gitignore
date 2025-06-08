@@ -5,3 +5,6 @@
 /*.lib
 /*.dll
 /*.dylib
+
+/test
+/*.exe

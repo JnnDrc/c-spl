@@ -9,13 +9,16 @@ int main(void){
     cspl_t* john = cspl_parse("tests/test.spl");
 
     char* proj = cspl_get(john,"project");
-    printf("%d",proj[strlen(proj) -1]);
-    printf("%s!",proj);
+    printf("%s.\n",proj);
     int age = cspl_geti(john,"age");
-    printf("netx year john will be %d\n",age+1);
+    char* name = cspl_get(john,"name");
+    printf("Happy birthday %s, ",name);
+    printf("netx year you will be %d\n",age+1);
     
-    printf("Latest error? %d\n",cspl_err());
+    printf("College grade was %f\n",cspl_getf(john,"grade"));
 
+    printf("Latest error? %d\n",cspl_err());
+    
     cspl_free(john);
     return 0;
 }

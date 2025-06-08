@@ -118,3 +118,22 @@ double cspl_getf(cspl_t* cspl, const char* key){
 int cspl_err(){
     return ___CSPL_ERR;
 }
+int cspl_perr(const char* s){
+    switch (___CSPL_ERR) {
+        case CSPL_OK:
+            break;
+        case CSPL_FILE_NOT_FOUND:
+            printf("%s: file was not found",s);
+            break;
+        case CSPL_ALLOC_FAIL:
+            printf("%s: failed to allocate memory",s);
+            break;
+        case CSPL_KEY_NOT_FOUND:
+            printf("%s: could not find desired key",s);
+            break;
+        default:
+            printf("%s: unknown error",s);
+            break;
+    }
+    return ___CSPL_ERR;
+}
