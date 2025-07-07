@@ -32,10 +32,14 @@ enum cspl_err{
 };
 extern int ___CSPL_ERR;
 
+// Create and Destroy ----------------------------------------------------------
+
 // open and parse a spl file
 cspl_t* cspl_parse(const char* spl);
 // free the cspl list
 void cspl_free(cspl_t* cspl);
+
+// File reading ----------------------------------------------------------------
 
 // get the value of the specified key
 char* cspl_get(cspl_t* cspl, const char* key);
@@ -43,6 +47,18 @@ char* cspl_get(cspl_t* cspl, const char* key);
 int cspl_geti(cspl_t* cspl, const char* key);
 // get the value of the specified key and converts to double
 double cspl_getf(cspl_t* cspl, const char* key);
+
+// File editing ----------------------------------------------------------------
+// WARN: FILE CHANGES WIPE OUT BLANK LINES
+// WARN: YOU NEED TO USE WRITE TO SAVE THE CHANGES
+
+// save the file changes
+int cspl_write(cspl_t* cspl, const char* spl);
+void cspl_edit(cspl_t* cspl, const char* key, const char* nval);
+void cspl_add(cspl_t* cspl, const char* key, const char* val);
+void cspl_delete(cspl_t* cspl, const char* key);
+
+// Error handling --------------------------------------------------------------
 
 // get the latest error
 int cspl_err();

@@ -5,10 +5,12 @@
 
 #include "cspl.h"
 
+// global error state -----
 int ___CSPL_ERR = CSPL_OK;
+//-------------------------
 
 // helper to trim strings
-void trim(char* str){
+static void trim(char* str){
     if(!str) return;
     size_t s = 0, e = strlen(str) - 1;
     while(isspace(str[s])){
@@ -35,32 +37,40 @@ cspl_t* cspl_parse(const char* spl){
 
     // parsing
     
-
     char *line = malloc(MAX_LINE_SIZE);
     size_t len;
     while(getline(&line,&len,f) != -1){
+        char *k, *v;
+        char is_comment = 0;
         // skip comments
-        if(line[0] == COMMENT) continue;
-        // no separator, skip
-        char* sep = strchr(line, ASSIGN_SEP);
-        if(!sep) continue;
+        if(line[0] == COMMENT){
+            k = NULL;
+            v = line;
+            trim(v);
+            is_comment = 1;
+            // continue;
+        }else{
+            // no separator, skip
+            char* sep = strchr(line, ASSIGN_SEP);
+            if(!sep) continue;
 
-        *sep = '\0';
-        char* k = line;
-        char* v = sep+1;
+            *sep = '\0';
+            k = line;
+            v = sep+1;
 
-        trim(k);
-        trim(v);
+            trim(k);
+            trim(v);
+        }
 
         struct cspl* pair = malloc(sizeof(struct cspl));
         if(!pair){
             ___CSPL_ERR = CSPL_ALLOC_FAIL;
             break;
         }
-
-        pair->key = strdup(k);
-        pair->value = strdup(v);
-        if(!pair->key || !pair->value){
+        
+        pair->key = k ? strdup(k) : NULL;
+        pair->value = v ? strdup(v) : NULL;
+        if(((pair->key && is_comment) || (!pair->key && !is_comment)) || !pair->value){
             free(pair->key);
             free(pair->value);
             free(pair);
@@ -94,12 +104,17 @@ void cspl_free(cspl_t* cspl){
         cur = next;
     }
 }
+
+
 char* cspl_get(cspl_t* cspl, const char* key){
     cspl_t* cur = cspl;
     while(cur){
         cspl_t *next = cur->next;
-
-        if(!strcmp(cur->key,key)) return cur->value;
+        
+        // if key, not a comment
+        if(cur->key){
+            if(!strcmp(cur->key,key)) return cur->value;
+        }
         
         cur = next;
     }
@@ -108,18 +123,83 @@ char* cspl_get(cspl_t* cspl, const char* key){
     return NULL;
 }
 int cspl_geti(cspl_t* cspl, const char* key){
-    return atoi(cspl_get(cspl,key));
+    char* k = cspl_get(cspl,key);
+    return k ? atoi(k) : 0;
 }
 double cspl_getf(cspl_t* cspl, const char* key){
-    return atof(cspl_get(cspl,key));
+    char* k = cspl_get(cspl,key);
+    return k ? atof(k) : 0.0;
 }
 
+int cspl_write(cspl_t* cspl, const char* spl){
+    FILE* f = fopen(spl,"w");
+    if(!f){
+        ___CSPL_ERR = CSPL_FILE_NOT_FOUND;
+        return 0;
+    }
+
+    int w = 0;
+    cspl_t* cur = cspl;
+    while(cur){
+        cspl_t *next = cur->next;
+
+            if(!cur->key) w += fprintf(f,"%s\n",cur->value); // comment
+            else w += fprintf(f,"%s: %s\n",cur->key,cur->value); // kv pair
+
+        cur = next;
+    }
+
+    return w;
+}
+
+void cspl_edit(cspl_t* cspl, const char* key, const char* nval){
+    cspl_t* cur = cspl;
+    while(cur){
+        cspl_t *next = cur->next;
+        
+        // if key, not a comment
+        if(cur->key){
+            if(!strcmp(cur->key,key)){
+                free(cur->value);
+                cur->value = strdup(nval);
+                trim(cur->value);
+                return;
+            }
+        }
+        
+        cur = next;
+    }
+
+    ___CSPL_ERR = CSPL_KEY_NOT_FOUND;
+}
+void cspl_add(cspl_t* cspl, const char* key, const char* val);
+void cspl_delete(cspl_t* cspl, const char* key){
+    cspl_t* cur = cspl, *prev = NULL;
+    while(cur){
+        cspl_t *next = cur->next;
+        
+        // if key, not a comment
+        if(cur->key){
+            if(!strcmp(cur->key,key)){
+                prev->next = next;
+                free(cur->next);
+                free(cur->value);
+                free(cur);
+                return;
+            }
+        }
+        prev = cur;
+        cur = next;
+    }
+
+    ___CSPL_ERR = CSPL_KEY_NOT_FOUND;
+}
 
 int cspl_err(){
     return ___CSPL_ERR;
 }
 int cspl_perr(const char* s){
-    switch (___CSPL_ERR) {
+    switch ((enum cspl_err)(___CSPL_ERR)) {
         case CSPL_OK:
             break;
         case CSPL_FILE_NOT_FOUND:
