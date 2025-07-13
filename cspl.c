@@ -48,7 +48,6 @@ cspl_t* cspl_parse(const char* spl){
             v = line;
             trim(v);
             is_comment = 1;
-            // continue;
         }else{
             // no separator, skip
             char* sep = strchr(line, ASSIGN_SEP);
@@ -93,6 +92,10 @@ cspl_t* cspl_parse(const char* spl){
     return head;
 }
 void cspl_free(cspl_t* cspl){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return;
+    }
     cspl_t* cur = cspl;
     while(cur){
         cspl_t* next = cur->next;
@@ -107,6 +110,11 @@ void cspl_free(cspl_t* cspl){
 
 
 char* cspl_get(cspl_t* cspl, const char* key){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return NULL;
+    }
+
     cspl_t* cur = cspl;
     while(cur){
         cspl_t *next = cur->next;
@@ -132,6 +140,11 @@ double cspl_getf(cspl_t* cspl, const char* key){
 }
 
 int cspl_write(cspl_t* cspl, const char* spl){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return 0;
+    }
+
     FILE* f = fopen(spl,"w");
     if(!f){
         ___CSPL_ERR = CSPL_FILE_NOT_FOUND;
@@ -153,6 +166,11 @@ int cspl_write(cspl_t* cspl, const char* spl){
 }
 
 void cspl_edit(cspl_t* cspl, const char* key, const char* nval){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return;
+    }
+
     cspl_t* cur = cspl;
     while(cur){
         cspl_t *next = cur->next;
@@ -172,8 +190,81 @@ void cspl_edit(cspl_t* cspl, const char* key, const char* nval){
 
     ___CSPL_ERR = CSPL_KEY_NOT_FOUND;
 }
-void cspl_add(cspl_t* cspl, const char* key, const char* val);
+int cspl_add(cspl_t* cspl, const char* key, const char* val){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return CSPL_NULL_POINTER;
+    }
+
+    cspl_t* cur = cspl;
+    while(cur){
+        cspl_t *next = cur->next;
+        if(next == NULL){
+            cspl_t* pair = malloc(sizeof(cspl_t));
+            if(!pair){
+                ___CSPL_ERR = CSPL_ALLOC_FAIL;
+                return CSPL_ALLOC_FAIL;
+            }
+            pair->key = strdup(key);
+            pair->value = strdup(val);
+            
+            if(!pair->key || !pair->value){
+                free(pair->key);
+                free(pair->value);
+                free(pair);
+                ___CSPL_ERR = CSPL_ALLOC_FAIL;
+                return CSPL_ALLOC_FAIL;
+            }
+            cur->next = pair;
+            return CSPL_OK;
+        }else{
+            cur = next;
+        }
+    }
+    return CSPL_UNKNOWN_ERROR;
+}
+int cspl_insert(cspl_t* cspl,const char* pkey, const char* key, const char* val){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return CSPL_NULL_POINTER;
+    }
+
+    cspl_t* cur = cspl;
+    while(cur){
+        cspl_t *next = cur->next;
+        if(!strcmp(cur->key,pkey)){
+            cspl_t* pair = malloc(sizeof(cspl_t));
+            if(!pair){
+                ___CSPL_ERR = CSPL_ALLOC_FAIL;
+                return CSPL_ALLOC_FAIL;
+            }
+            pair->key = strdup(key);
+            pair->value = strdup(val);
+            
+            if(!pair->key || !pair->value){
+                free(pair->key);
+                free(pair->value);
+                free(pair);
+                ___CSPL_ERR = CSPL_ALLOC_FAIL;
+                return CSPL_ALLOC_FAIL;
+            }
+            // cur -> next
+
+            cur->next = pair;   // cur -> pair
+            pair->next = next;  // pair -> next
+            return CSPL_OK;
+        }else{
+            cur = next;
+        }
+    }
+    return CSPL_KEY_NOT_FOUND;
+}
 void cspl_delete(cspl_t* cspl, const char* key){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return;
+    }
+
     cspl_t* cur = cspl, *prev = NULL;
     while(cur){
         cspl_t *next = cur->next;
@@ -181,7 +272,7 @@ void cspl_delete(cspl_t* cspl, const char* key){
         // if key, not a comment
         if(cur->key){
             if(!strcmp(cur->key,key)){
-                prev->next = next;
+                if(prev) prev->next = next;
                 free(cur->next);
                 free(cur->value);
                 free(cur);
@@ -205,12 +296,15 @@ int cspl_perr(const char* s){
         case CSPL_FILE_NOT_FOUND:
             printf("%s: file was not found",s);
             break;
-        case CSPL_ALLOC_FAIL:
-            printf("%s: failed to allocate memory",s);
-            break;
         case CSPL_KEY_NOT_FOUND:
             printf("%s: could not find desired key",s);
             break;
+        case CSPL_ALLOC_FAIL:
+            printf("%s: failed to allocate memory",s);
+            break;
+        case CSPL_NULL_POINTER:
+            printf("%s: tried to pass a null pointer to a function",s);
+        case CSPL_UNKNOWN_ERROR:
         default:
             printf("%s: unknown error",s);
             break;

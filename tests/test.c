@@ -28,6 +28,10 @@ int main(void){
     printf("Latest error? %d\n",cspl_err());
     cspl_perr("It is");
     
+    cspl_add(john, "spouse","Marta");
+    printf("\nHe is married to %s\n",cspl_get(john,"spouse"));
+    
+    cspl_insert(john,"age","height","172cm");
     cspl_write(john,"tests/testw.spl");
 
     cspl_free(john);

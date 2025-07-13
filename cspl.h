@@ -27,8 +27,10 @@ typedef struct cspl{
 enum cspl_err{
     CSPL_OK = 0,
     CSPL_FILE_NOT_FOUND,
-    CSPL_ALLOC_FAIL,
     CSPL_KEY_NOT_FOUND,
+    CSPL_ALLOC_FAIL,
+    CSPL_NULL_POINTER,
+    CSPL_UNKNOWN_ERROR = -1
 };
 extern int ___CSPL_ERR;
 
@@ -54,8 +56,13 @@ double cspl_getf(cspl_t* cspl, const char* key);
 
 // save the file changes
 int cspl_write(cspl_t* cspl, const char* spl);
+// Change the value of an entry
 void cspl_edit(cspl_t* cspl, const char* key, const char* nval);
-void cspl_add(cspl_t* cspl, const char* key, const char* val);
+// Adds the entry at the bottom of the file
+int cspl_add(cspl_t* cspl, const char* key, const char* val);
+// Inserts the entry after entry pkey
+int cspl_insert(cspl_t* cspl,const char* pkey, const char* key, const char* val);
+// Deletes an entry
 void cspl_delete(cspl_t* cspl, const char* key);
 
 // Error handling --------------------------------------------------------------
