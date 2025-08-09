@@ -4,7 +4,7 @@ Simple Pairs Language implementation in C
 
 ## SPL
 
-SPL is a config language, see here [SPL.md]
+SPL is a config language, see here [SPL](SPL.md)
 
 ## API
 
