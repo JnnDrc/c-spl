@@ -22,19 +22,30 @@ pair: value
 ```
 It does not accept comments and pairs in same line
 
-## But other types?
+## But how about other types?
 
 If you want to use numbers, just use strings and convert them
 ```c
 int val = atoi(cspl_get(file, "key"));
 ```
-Arrays can be used as strings in a value separated by ' '
+Arrays can be used as strings in a value separated by a delimiter 
+```spl
+names: john, jacob, may, april, aethelred
+```
+
 ```c
-// very long here
+cspl_t *group = cspl_parse("group.spl");
+
+// very long parsing here
 ```
 Tables can just be the name of other spl file
 ```c
 char* user = cspl_get(users,"john");
 cspl_t *john = cspl_parse("user");
 ```
-At the end, it's just strings, use it as you want
+At the end, it's just strings, use it as you think is best
+
+## Other languages
+
+currently there is only this C implementation, but as it's made in C, you can  
+easily interface it with any good language

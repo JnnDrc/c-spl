@@ -51,7 +51,7 @@ int cspl_geti(cspl_t* cspl, const char* key);
 double cspl_getf(cspl_t* cspl, const char* key);
 
 // File editing ----------------------------------------------------------------
-// WARN: FILE CHANGES WIPE OUT BLANK LINES
+// WARN: FILE CHANGES WIPE OUT LINE FORMATING (BLANK LINES)
 // WARN: YOU NEED TO USE WRITE TO SAVE THE CHANGES
 
 // save the file changes
@@ -60,7 +60,7 @@ int cspl_write(cspl_t* cspl, const char* spl);
 void cspl_edit(cspl_t* cspl, const char* key, const char* nval);
 // Adds the entry at the bottom of the file
 int cspl_add(cspl_t* cspl, const char* key, const char* val);
-// Inserts the entry after entry pkey
+// Inserts the entry after the entry pkey
 int cspl_insert(cspl_t* cspl,const char* pkey, const char* key, const char* val);
 // Deletes an entry
 void cspl_delete(cspl_t* cspl, const char* key);
@@ -71,6 +71,5 @@ void cspl_delete(cspl_t* cspl, const char* key);
 int cspl_err();
 // get and print the latest error
 int cspl_perr(const char* s);
-
 
 #endif /* _CSPL_H */

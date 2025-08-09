@@ -156,8 +156,8 @@ int cspl_write(cspl_t* cspl, const char* spl){
     while(cur){
         cspl_t *next = cur->next;
 
-            if(!cur->key) w += fprintf(f,"%s\n",cur->value); // comment
-            else w += fprintf(f,"%s: %s\n",cur->key,cur->value); // kv pair
+        if(!cur->key) w += fprintf(f,"%s\n",cur->value); // comment
+        else w += fprintf(f,"%s: %s\n",cur->key,cur->value); // kv pair
 
         cur = next;
     }
