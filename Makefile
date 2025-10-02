@@ -31,13 +31,14 @@ uninstall:
 	rm -f $(LIBDIR)/$(TARGET)
 	rm -f $(INCDIR)/$(HEADER)
 
-# degug build without optimizations and with debug symbols
+# debug build without optimizations and with debug symbols
 debug:
 	$(CC) -c -o cspl.o cspl.c $(DBGCFLAGS)
 	$(AR) libcspl-g.a cspl.o
 
 test:
 	$(CC) tests/test.c -o test -lcspl-g -L./ -g
+	$(CC) tests/test2.c -o test2 -lcspl-g -L./ -g
 
 clean:
 	rm -f $(TARGET)  $(OBJ) libcspl-g.a

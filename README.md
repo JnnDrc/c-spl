@@ -8,17 +8,21 @@ SPL is a config language, see here [SPL](SPL.md)
 
 ## API
 
-it have 7 functions
+it have 16 functions
 - cspl\_parse: parse the file
 - cspl\_free: free the spl list
 - cspl\_get: get value of desired key
+- cspl\_getdup: get a malloced copy of the value of desired key
 - cspl\_geti: atoi of cspl\_get
 - cspl\_getf: atof of cspl\_get
+- cspl\_getb: get if the value of key is true or false (or undefined if neither)
 - cspl\_write: write file changes
 - cspl\_edit: change value of desired key
 - cspl\_add: add key at bottom of file
 - cspl\_insert: insert key after other key
 - cspl\_delete: delete key
+- cspl\_exists: checks if a key exists
+- cspl\_count: get the amount of keys
 - cspl\_err: get the value of the last error
 - cspl\_perr: get the value and print the string description of the last error
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -31,7 +32,7 @@ cspl_t* cspl_parse(const char* spl){
     // initialization
     FILE* f = fopen(spl,"r");
     if(!f){
-        ___CSPL_ERR = CSPL_FILE_NOT_FOUND;
+        ___CSPL_ERR = CSPL_CANT_OPEN_FILE;
         return NULL;
     }
 
@@ -107,7 +108,15 @@ void cspl_free(cspl_t* cspl){
         cur = next;
     }
 }
+cspl_t* cspl_get_parse(cspl_t* cspl, const char* key){
+    char* v = cspl_get(cspl,key);
+    if(!v) return NULL;
 
+    cspl_t* ncspl = cspl_parse(v);
+    if(!ncspl) return NULL;
+    
+    return ncspl;
+}
 
 char* cspl_get(cspl_t* cspl, const char* key){
     if(!cspl){
@@ -119,7 +128,7 @@ char* cspl_get(cspl_t* cspl, const char* key){
     while(cur){
         cspl_t *next = cur->next;
         
-        // if key, not a comment
+        // if has key, is not a comment
         if(cur->key){
             if(!strcmp(cur->key,key)) return cur->value;
         }
@@ -130,13 +139,33 @@ char* cspl_get(cspl_t* cspl, const char* key){
     ___CSPL_ERR = CSPL_KEY_NOT_FOUND;
     return NULL;
 }
+char* cspl_getdup(cspl_t* cspl, const char* key){
+    char* v = cspl_get(cspl,key);
+    if(!v) return NULL;
+    char* s = malloc(strlen(v) + 1);
+    if(!s){
+        ___CSPL_ERR = CSPL_ALLOC_FAIL;
+        return NULL;
+    }
+    strcpy(s,v);
+    return s;
+}
 int cspl_geti(cspl_t* cspl, const char* key){
     char* k = cspl_get(cspl,key);
-    return k ? atoi(k) : 0;
+    return k ? atoi(k) : -1;
 }
 double cspl_getf(cspl_t* cspl, const char* key){
     char* k = cspl_get(cspl,key);
-    return k ? atof(k) : 0.0;
+    return k ? atof(k) : -1.0;
+}
+bool cspl_getb(cspl_t* cspl, const char* key){
+    const char* v = cspl_get(cspl,key);
+    if(!v) return -1;
+    
+    if(!strcmp(v,"true")) return true;
+    else if(!strcmp(v,"false")) return false;
+
+    return -1;
 }
 
 int cspl_write(cspl_t* cspl, const char* spl){
@@ -147,7 +176,7 @@ int cspl_write(cspl_t* cspl, const char* spl){
 
     FILE* f = fopen(spl,"w");
     if(!f){
-        ___CSPL_ERR = CSPL_FILE_NOT_FOUND;
+        ___CSPL_ERR = CSPL_CANT_OPEN_FILE;
         return 0;
     }
 
@@ -189,6 +218,7 @@ void cspl_edit(cspl_t* cspl, const char* key, const char* nval){
     }
 
     ___CSPL_ERR = CSPL_KEY_NOT_FOUND;
+    return;
 }
 int cspl_add(cspl_t* cspl, const char* key, const char* val){
     if(!cspl){
@@ -284,6 +314,34 @@ void cspl_delete(cspl_t* cspl, const char* key){
     }
 
     ___CSPL_ERR = CSPL_KEY_NOT_FOUND;
+    return;
+}
+
+bool cspl_exists(cspl_t* cspl, const char* key){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return false;
+    }
+    cspl_t* cur = cspl;
+    while(cur){
+        if(!strcmp(cur->key,key)) return true;
+
+        cur = cur->next;
+    }
+    return false;
+}
+unsigned int cspl_count(cspl_t* cspl){
+    if(!cspl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return 0;
+    }
+    cspl_t* cur = cspl;
+    unsigned int count = 0;
+    while(cur){
+        if(cur->key) count ++;
+        cur = cur->next;
+    }
+    return count;
 }
 
 int cspl_err(){
@@ -293,8 +351,8 @@ int cspl_perr(const char* s){
     switch ((enum cspl_err)(___CSPL_ERR)) {
         case CSPL_OK:
             break;
-        case CSPL_FILE_NOT_FOUND:
-            printf("%s: file was not found",s);
+        case CSPL_CANT_OPEN_FILE:
+            printf("%s: couldn't open file",s);
             break;
         case CSPL_KEY_NOT_FOUND:
             printf("%s: could not find desired key",s);
@@ -304,6 +362,7 @@ int cspl_perr(const char* s){
             break;
         case CSPL_NULL_POINTER:
             printf("%s: tried to pass a null pointer to a function",s);
+            break;
         case CSPL_UNKNOWN_ERROR:
         default:
             printf("%s: unknown error",s);

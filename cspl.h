@@ -13,7 +13,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
+// Version --------------------------------------------------------------------|
+#define CSPL_MAJOR 1
+#define CSPL_MINOR 1
+// ----------------------------------------------------------------------------|
+
+// Definitions ----------------------------------------------------------------|
 #define MAX_LINE_SIZE 256
 #define COMMENT '#'
 #define ASSIGN_SEP ':'
@@ -23,38 +30,45 @@ typedef struct cspl{
     char *key, *value;
     struct cspl* next;
 }cspl_t;
+
 // possible errors
-enum cspl_err{
+typedef enum cspl_err{
     CSPL_OK = 0,
-    CSPL_FILE_NOT_FOUND,
+    CSPL_CANT_OPEN_FILE,
     CSPL_KEY_NOT_FOUND,
     CSPL_ALLOC_FAIL,
     CSPL_NULL_POINTER,
     CSPL_UNKNOWN_ERROR = -1
-};
+}cspl_err_n;
 extern int ___CSPL_ERR;
 
-// Create and Destroy ----------------------------------------------------------
+// Basics ---------------------------------------------------------------------|
 
 // open and parse a spl file
 cspl_t* cspl_parse(const char* spl);
 // free the cspl list
 void cspl_free(cspl_t* cspl);
+// get the value of specified key and try to open it as a spl file path
+cspl_t* cspl_get_parse(cspl_t* cspl, const char* key);
 
-// File reading ----------------------------------------------------------------
+// File reading ---------------------------------------------------------------|
 
 // get the value of the specified key
 char* cspl_get(cspl_t* cspl, const char* key);
+// get the value of a specified key and return a malloced copy of it (NEED TO BE FREED LATER)
+char* cspl_getdup(cspl_t* cspl, const char* key);
 // get the value of the specified key and converts to int
 int cspl_geti(cspl_t* cspl, const char* key);
 // get the value of the specified key and converts to double
 double cspl_getf(cspl_t* cspl, const char* key);
+// get true, false or invalid (1|0|-1) if string is respectively 'true', 'false' or neither
+bool cspl_getb(cspl_t* cspl, const char* key);
 
-// File editing ----------------------------------------------------------------
-// WARN: FILE CHANGES WIPE OUT LINE FORMATING (BLANK LINES)
+// File editing ---------------------------------------------------------------|
 // WARN: YOU NEED TO USE WRITE TO SAVE THE CHANGES
 
-// save the file changes
+// Save the file changes
+// WARN: FILE CHANGES WIPE OUT LINE FORMATING (BLANK LINES)
 int cspl_write(cspl_t* cspl, const char* spl);
 // Change the value of an entry
 void cspl_edit(cspl_t* cspl, const char* key, const char* nval);
@@ -65,7 +79,17 @@ int cspl_insert(cspl_t* cspl,const char* pkey, const char* key, const char* val)
 // Deletes an entry
 void cspl_delete(cspl_t* cspl, const char* key);
 
-// Error handling --------------------------------------------------------------
+// Utilities ------------------------------------------------------------------|
+
+// check if a key exists or not
+bool cspl_exists(cspl_t* cspl, const char* key);
+// return the amount of pairs
+unsigned int cspl_count(cspl_t* cspl);
+
+// void cspl_comment(cspl_t* cspl, const char* key);
+// void cspl_uncomment(cspl_t* cspl, int i);
+
+// Error handling -------------------------------------------------------------|
 
 // get the latest error
 int cspl_err();

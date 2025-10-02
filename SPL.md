@@ -6,9 +6,10 @@ SPL is a simple configuration language it just have one thing: strings
 
 SPL works with pairs of strings like:
 ```spl
-pair: value
-pair: value
+key: value
+key: value
 ```
+both key and value are strings of text in a supported character-set
 
 It does not have numbers, or tables, or arrays, or anything.
 Just strings.
@@ -16,11 +17,14 @@ Just strings.
 It also have line comments using '#', like:
 ```spl
 # comment
-pair: value
+key: value
 # comment
-pair: value
+key: value
 ```
-It does not accept comments and pairs in same line
+It does not accept comments and pairs in same line, a comment may get the entire
+line
+
+and this is it, that's all of SPL standard
 
 ## But how about other types?
 
@@ -35,7 +39,7 @@ names: john, jacob, may, april, aethelred
 
 ```c
 cspl_t *group = cspl_parse("group.spl");
-
+const char* names = cspl_get(group, "names");
 // very long parsing here
 ```
 Tables can just be the name of other spl file

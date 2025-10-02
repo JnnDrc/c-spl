@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <string.h>
-#include <ctype.h>
 
 #include "../cspl.h"
 
@@ -14,6 +12,8 @@ int main(void){
     char* name = cspl_get(john,"name");
     printf("Happy birthday %s, ",name);
     printf("netx year you will be %d\n",age+1);
+
+    printf("there are %d keys", cspl_count(john));
     
     printf("College grade was %f\n",cspl_getf(john,"grade"));
     printf("let's change it!\n");
@@ -27,9 +27,11 @@ int main(void){
 
     printf("Latest error? %d\n",cspl_err());
     cspl_perr("It is");
-    
+ 
+    printf("\nWho he is married with?\n");
+
     cspl_add(john, "spouse","Marta");
-    printf("\nHe is married to %s\n",cspl_get(john,"spouse"));
+    printf("He is married to %s\n",cspl_get(john,"spouse"));
     
     cspl_insert(john,"age","height","172cm");
     cspl_write(john,"tests/testw.spl");
