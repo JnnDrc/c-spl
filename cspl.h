@@ -12,18 +12,19 @@
 #define _CSPL_H
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
 
 // Version --------------------------------------------------------------------|
 #define CSPL_MAJOR 1
-#define CSPL_MINOR 1
+#define CSPL_MINOR 2
 // ----------------------------------------------------------------------------|
 
 // Definitions ----------------------------------------------------------------|
 #define MAX_LINE_SIZE 256
 #define COMMENT '#'
 #define ASSIGN_SEP ':'
+
+#define invalid -1
 
 // cspl linked list node
 typedef struct cspl{
@@ -38,6 +39,7 @@ typedef enum cspl_err{
     CSPL_KEY_NOT_FOUND,
     CSPL_ALLOC_FAIL,
     CSPL_NULL_POINTER,
+    CSPL_KEY_WITHOUT_VALUE,
     CSPL_UNKNOWN_ERROR = -1
 }cspl_err_n;
 extern int ___CSPL_ERR;
@@ -45,7 +47,11 @@ extern int ___CSPL_ERR;
 // Basics ---------------------------------------------------------------------|
 
 // open and parse a spl file
-cspl_t* cspl_parse(const char* spl);
+cspl_t* cspl_parse(const char* filename);
+// parse user managed file
+cspl_t* cspl_parse_file(FILE* file);
+// parse string as spl
+cspl_t* cspl_parse_string(char* spl, size_t len);
 // free the cspl list
 void cspl_free(cspl_t* cspl);
 // get the value of specified key and try to open it as a spl file path
@@ -63,12 +69,13 @@ int cspl_geti(cspl_t* cspl, const char* key);
 double cspl_getf(cspl_t* cspl, const char* key);
 // get true, false or invalid (1|0|-1) if string is respectively 'true', 'false' or neither
 bool cspl_getb(cspl_t* cspl, const char* key);
+// get the value at an index of a comma separated string and return a malloced copy of it (NEED TO BE FREED LATER)
+char* cspl_getarr(cspl_t* cspl, const char* key, int index);
 
 // File editing ---------------------------------------------------------------|
-// WARN: YOU NEED TO USE WRITE TO SAVE THE CHANGES
 
 // Save the file changes
-// WARN: FILE CHANGES WIPE OUT LINE FORMATING (BLANK LINES)
+// WARN: FILE CHANGES WIPE OUT BLANK LINES
 int cspl_write(cspl_t* cspl, const char* spl);
 // Change the value of an entry
 void cspl_edit(cspl_t* cspl, const char* key, const char* nval);

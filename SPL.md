@@ -21,8 +21,8 @@ key: value
 # comment
 key: value
 ```
-It does not accept comments and pairs in same line, a comment may get the entire
-line
+It does not accept comments and pairs in same line, a comment should get the
+entire line
 
 and this is it, that's all of SPL standard
 
@@ -40,7 +40,7 @@ names: john, jacob, may, april, aethelred
 ```c
 cspl_t *group = cspl_parse("group.spl");
 const char* names = cspl_get(group, "names");
-// very long parsing here
+// long parsing here
 ```
 Tables can just be the name of other spl file
 ```c

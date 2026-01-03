@@ -26,11 +26,32 @@ static void trim(char* str){
     }
 }
 
-cspl_t* cspl_parse(const char* spl){
+static char* strgets(char* buf, size_t max, char** cur, char* end){
+    if(*cur >= end || max == 0) return NULL;
+
+    size_t remain = end - *cur;
+    size_t maxcpy = max - 1;
+    if(remain < maxcpy) maxcpy = remain;
+
+    char* l = memchr(*cur,'\n',maxcpy);
+    size_t llen = l ? (size_t)((l - *cur) + 1) : maxcpy;
+    
+    memcpy(buf,*cur,llen);
+    buf[llen] = '\0';
+    *cur += llen;
+    
+    return buf;
+}
+
+cspl_t* cspl_parse(const char* filename){
+    if(!filename){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return NULL;
+    }
     cspl_t *head = NULL;
     cspl_t *tail = NULL;
     // initialization
-    FILE* f = fopen(spl,"r");
+    FILE* f = fopen(filename,"r");
     if(!f){
         ___CSPL_ERR = CSPL_CANT_OPEN_FILE;
         return NULL;
@@ -38,12 +59,11 @@ cspl_t* cspl_parse(const char* spl){
 
     // parsing
     
-    char *line = malloc(MAX_LINE_SIZE);
-    size_t len;
-    while(getline(&line,&len,f) != -1){
+    char line[MAX_LINE_SIZE];
+    while(fgets(line,sizeof(line),f)){
         char *k, *v;
         char is_comment = 0;
-        // skip comments
+        // store comments
         if(line[0] == COMMENT){
             k = NULL;
             v = line;
@@ -52,7 +72,10 @@ cspl_t* cspl_parse(const char* spl){
         }else{
             // no separator, skip
             char* sep = strchr(line, ASSIGN_SEP);
-            if(!sep) continue;
+            if(!sep){
+                ___CSPL_ERR = CSPL_KEY_WITHOUT_VALUE;
+                break;
+            }
 
             *sep = '\0';
             k = line;
@@ -88,8 +111,134 @@ cspl_t* cspl_parse(const char* spl){
     }
 
     // de-init
-    free(line);
     fclose(f);
+    return head;
+}
+
+cspl_t* cspl_parse_file(FILE* file){
+    if(!file){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return NULL;
+    }
+    cspl_t *head = NULL;
+    cspl_t *tail = NULL;
+
+    // parsing
+    char line[MAX_LINE_SIZE];
+    while(fgets(line,sizeof(line),file)){
+        char *k, *v;
+        char is_comment = 0;
+        // store comments
+        if(line[0] == COMMENT){
+            k = NULL;
+            v = line;
+            trim(v);
+            is_comment = 1;
+        }else{
+            // no separator, skip
+            char* sep = strchr(line, ASSIGN_SEP);
+            if(!sep){
+                ___CSPL_ERR = CSPL_KEY_WITHOUT_VALUE;
+                break;
+            }
+
+            *sep = '\0';
+            k = line;
+            v = sep+1;
+
+            trim(k);
+            trim(v);
+        }
+
+        struct cspl* pair = malloc(sizeof(struct cspl));
+        if(!pair){
+            ___CSPL_ERR = CSPL_ALLOC_FAIL;
+            break;
+        }
+        
+        pair->key = k ? strdup(k) : NULL;
+        pair->value = v ? strdup(v) : NULL;
+        if(((pair->key && is_comment) || (!pair->key && !is_comment)) || !pair->value){
+            free(pair->key);
+            free(pair->value);
+            free(pair);
+            ___CSPL_ERR = CSPL_ALLOC_FAIL;
+            break;
+        }
+        
+        pair->next = NULL;
+        if(head == NULL){
+            head = tail = pair;
+        }else{
+            tail->next = pair;
+            tail = pair;
+        }
+    }
+    return head;
+}
+
+cspl_t* cspl_parse_string(char* spl, size_t len){
+    if(!spl){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return NULL;
+    }
+    cspl_t *head = NULL;
+    cspl_t *tail = NULL;
+
+    // parsing
+    
+    char line[MAX_LINE_SIZE];
+    char* cur = spl;
+    char* end = spl + len;
+    while(strgets(line,sizeof(line),&cur,end)){
+        char *k, *v;
+        char is_comment = 0;
+        // store comments
+        if(line[0] == COMMENT){
+            k = NULL;
+            v = line;
+            trim(v);
+            is_comment = 1;
+        }else{
+            // no separator, skip
+            char* sep = strchr(line, ASSIGN_SEP);
+            if(!sep){
+                ___CSPL_ERR = CSPL_KEY_WITHOUT_VALUE;
+                break;
+            }
+
+            *sep = '\0';
+            k = line;
+            v = sep+1;
+
+            trim(k);
+            trim(v);
+        }
+
+        struct cspl* pair = malloc(sizeof(struct cspl));
+        if(!pair){
+            ___CSPL_ERR = CSPL_ALLOC_FAIL;
+            break;
+        }
+        
+        pair->key = k ? strdup(k) : NULL;
+        pair->value = v ? strdup(v) : NULL;
+        if(((pair->key && is_comment) || (!pair->key && !is_comment)) || !pair->value){
+            free(pair->key);
+            free(pair->value);
+            free(pair);
+            ___CSPL_ERR = CSPL_ALLOC_FAIL;
+            break;
+        }
+        
+        pair->next = NULL;
+        if(head == NULL){
+            head = tail = pair;
+        }else{
+            tail->next = pair;
+            tail = pair;
+        }
+    }
     return head;
 }
 void cspl_free(cspl_t* cspl){
@@ -160,12 +309,46 @@ double cspl_getf(cspl_t* cspl, const char* key){
 }
 bool cspl_getb(cspl_t* cspl, const char* key){
     const char* v = cspl_get(cspl,key);
-    if(!v) return -1;
+    if(!v) return invalid;
     
     if(!strcmp(v,"true")) return true;
     else if(!strcmp(v,"false")) return false;
 
-    return -1;
+    return invalid;
+}
+
+char* cspl_getarr(cspl_t* cspl, const char* key, int index){
+    char* v  = cspl_get(cspl, key);
+    if(!v) return NULL;
+    int cur = 0;
+    char* start = v;
+    while(*v){
+        if(*v == ','){
+            if(cur == index) break;
+            cur++;
+            v++;
+            while(*v == ' ') v++;
+            start = v;
+            continue;
+        }
+        v++;
+    }
+
+    if(cur != index){
+        //index out of bounds
+        return NULL;
+    }
+
+    size_t len = v - start;
+    char* vi = malloc(len + 1);
+    if(!vi){
+        ___CSPL_ERR = CSPL_ALLOC_FAIL;
+        return NULL;
+    }
+
+    memcpy(vi,start,len);
+    vi[len] = '\0';
+    return vi;
 }
 
 int cspl_write(cspl_t* cspl, const char* spl){
@@ -362,6 +545,9 @@ int cspl_perr(const char* s){
             break;
         case CSPL_NULL_POINTER:
             printf("%s: tried to pass a null pointer to a function",s);
+            break;
+        case CSPL_KEY_WITHOUT_VALUE:
+            printf("%s: find a key with no value when trying to parse file",s);
             break;
         case CSPL_UNKNOWN_ERROR:
         default:

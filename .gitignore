@@ -6,5 +6,8 @@
 /*.dll
 /*.dylib
 
-/test
+/test*
 /*.exe
+
+.cache
+compile_commands.json

@@ -7,3 +7,5 @@
 - [] deal with duplicated keys
 - [] create an actual SPL standard document
 - [] remove tests and create examples
+- [] implement comment/uncomment
+- [] create a better parsing error handling (error messages)
