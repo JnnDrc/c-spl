@@ -9,3 +9,4 @@
 - [] remove tests and create examples
 - [] implement comment/uncomment
 - [] create a better parsing error handling (error messages)
+- [] check if key exists even with identation

@@ -38,7 +38,7 @@ debug:
 
 test:
 	$(MAKE) debug
-	$(CC) tests/test.c -o test -lcspl-g -L./ -g
+	$(CC) tests/test1.c -o test1 -lcspl-g -L./ -g
 	$(CC) tests/test2.c -o test2 -lcspl-g -L./ -g
 	$(CC) tests/test3.c -o test3 -lcspl-g -L./ -g
 

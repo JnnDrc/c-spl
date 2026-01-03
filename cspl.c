@@ -43,6 +43,60 @@ static char* strgets(char* buf, size_t max, char** cur, char* end){
     return buf;
 }
 
+static int parse(char* line, cspl_t** head, cspl_t** tail){
+        char *k, *v;
+        char is_comment = 0;
+        // store comments
+        if(line[0] == COMMENT){
+            k = NULL;
+            v = line;
+            trim(v);
+            is_comment = 1;
+        }else if(line[0] == '\n'){
+            // TODO: check if key exists, even with identation
+            return CSPL_OK;
+        }else{
+            // no separator, skip
+            char* sep = strchr(line, ASSIGN_SEP);
+            if(!sep){
+                ___CSPL_ERR = CSPL_KEY_WITHOUT_VALUE;
+                return ___CSPL_ERR;
+            }
+
+            *sep = '\0';
+            k = line;
+            v = sep+1;
+
+            trim(k);
+            trim(v);
+        }
+
+        struct cspl* pair = malloc(sizeof(struct cspl));
+        if(!pair){
+            ___CSPL_ERR = CSPL_ALLOC_FAIL;
+            return ___CSPL_ERR;
+        }
+        
+        pair->key = k ? strdup(k) : NULL;
+        pair->value = v ? strdup(v) : NULL;
+        if(((pair->key && is_comment) || (!pair->key && !is_comment)) || !pair->value){
+            free(pair->key);
+            free(pair->value);
+            free(pair);
+            ___CSPL_ERR = CSPL_ALLOC_FAIL;
+            return ___CSPL_ERR;
+        }
+        
+        pair->next = NULL;
+        if(*head == NULL){
+            *head = *tail = pair;
+        }else{
+            (*tail)->next = pair;
+            *tail = pair;
+        }
+    return CSPL_OK;
+}
+
 cspl_t* cspl_parse(const char* filename){
     if(!filename){
         ___CSPL_ERR = CSPL_NULL_POINTER;
@@ -61,54 +115,8 @@ cspl_t* cspl_parse(const char* filename){
     
     char line[MAX_LINE_SIZE];
     while(fgets(line,sizeof(line),f)){
-        char *k, *v;
-        char is_comment = 0;
-        // store comments
-        if(line[0] == COMMENT){
-            k = NULL;
-            v = line;
-            trim(v);
-            is_comment = 1;
-        }else{
-            // no separator, skip
-            char* sep = strchr(line, ASSIGN_SEP);
-            if(!sep){
-                ___CSPL_ERR = CSPL_KEY_WITHOUT_VALUE;
-                break;
-            }
-
-            *sep = '\0';
-            k = line;
-            v = sep+1;
-
-            trim(k);
-            trim(v);
-        }
-
-        struct cspl* pair = malloc(sizeof(struct cspl));
-        if(!pair){
-            ___CSPL_ERR = CSPL_ALLOC_FAIL;
-            break;
-        }
-        
-        pair->key = k ? strdup(k) : NULL;
-        pair->value = v ? strdup(v) : NULL;
-        if(((pair->key && is_comment) || (!pair->key && !is_comment)) || !pair->value){
-            free(pair->key);
-            free(pair->value);
-            free(pair);
-            ___CSPL_ERR = CSPL_ALLOC_FAIL;
-            break;
-        }
-        
-        pair->next = NULL;
-        if(head == NULL){
-            head = tail = pair;
-        }else{
-            tail->next = pair;
-            tail = pair;
-        }
-    }
+        if(parse(line,&head,&tail)) break;
+    } 
 
     // de-init
     fclose(f);
@@ -125,55 +133,10 @@ cspl_t* cspl_parse_file(FILE* file){
 
     // parsing
     char line[MAX_LINE_SIZE];
-    while(fgets(line,sizeof(line),file)){
-        char *k, *v;
-        char is_comment = 0;
-        // store comments
-        if(line[0] == COMMENT){
-            k = NULL;
-            v = line;
-            trim(v);
-            is_comment = 1;
-        }else{
-            // no separator, skip
-            char* sep = strchr(line, ASSIGN_SEP);
-            if(!sep){
-                ___CSPL_ERR = CSPL_KEY_WITHOUT_VALUE;
-                break;
-            }
-
-            *sep = '\0';
-            k = line;
-            v = sep+1;
-
-            trim(k);
-            trim(v);
-        }
-
-        struct cspl* pair = malloc(sizeof(struct cspl));
-        if(!pair){
-            ___CSPL_ERR = CSPL_ALLOC_FAIL;
-            break;
-        }
-        
-        pair->key = k ? strdup(k) : NULL;
-        pair->value = v ? strdup(v) : NULL;
-        if(((pair->key && is_comment) || (!pair->key && !is_comment)) || !pair->value){
-            free(pair->key);
-            free(pair->value);
-            free(pair);
-            ___CSPL_ERR = CSPL_ALLOC_FAIL;
-            break;
-        }
-        
-        pair->next = NULL;
-        if(head == NULL){
-            head = tail = pair;
-        }else{
-            tail->next = pair;
-            tail = pair;
-        }
+    while(fgets(line,sizeof(line),file)) {
+        if(parse(line,&head,&tail)) break;
     }
+
     return head;
 }
 
@@ -190,55 +153,10 @@ cspl_t* cspl_parse_string(char* spl, size_t len){
     char line[MAX_LINE_SIZE];
     char* cur = spl;
     char* end = spl + len;
-    while(strgets(line,sizeof(line),&cur,end)){
-        char *k, *v;
-        char is_comment = 0;
-        // store comments
-        if(line[0] == COMMENT){
-            k = NULL;
-            v = line;
-            trim(v);
-            is_comment = 1;
-        }else{
-            // no separator, skip
-            char* sep = strchr(line, ASSIGN_SEP);
-            if(!sep){
-                ___CSPL_ERR = CSPL_KEY_WITHOUT_VALUE;
-                break;
-            }
-
-            *sep = '\0';
-            k = line;
-            v = sep+1;
-
-            trim(k);
-            trim(v);
-        }
-
-        struct cspl* pair = malloc(sizeof(struct cspl));
-        if(!pair){
-            ___CSPL_ERR = CSPL_ALLOC_FAIL;
-            break;
-        }
-        
-        pair->key = k ? strdup(k) : NULL;
-        pair->value = v ? strdup(v) : NULL;
-        if(((pair->key && is_comment) || (!pair->key && !is_comment)) || !pair->value){
-            free(pair->key);
-            free(pair->value);
-            free(pair);
-            ___CSPL_ERR = CSPL_ALLOC_FAIL;
-            break;
-        }
-        
-        pair->next = NULL;
-        if(head == NULL){
-            head = tail = pair;
-        }else{
-            tail->next = pair;
-            tail = pair;
-        }
+    while(strgets(line,sizeof(line),&cur,end)) {
+        if(parse(line,&head,&tail)) break;
     }
+
     return head;
 }
 void cspl_free(cspl_t* cspl){
@@ -420,6 +338,7 @@ int cspl_add(cspl_t* cspl, const char* key, const char* val){
             }
             pair->key = strdup(key);
             pair->value = strdup(val);
+            pair->next = NULL;
             
             if(!pair->key || !pair->value){
                 free(pair->key);
