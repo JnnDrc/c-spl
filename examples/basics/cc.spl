@@ -1,0 +1,4 @@
+cc:  gcc
+src: cspl.c
+out: libcspl
+flags: -Wall -Wextra

@@ -6,7 +6,6 @@
 /*.dll
 /*.dylib
 
-/test*
 /*.exe
 
 .cache

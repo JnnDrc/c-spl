@@ -19,7 +19,7 @@ cspl.o: cspl.c
 	$(CC) -c -o $@ $^ $(CFLAGS)
 
 
-.PHONY: install uninstall test clean debug
+.PHONY: install uninstall examples test clean debug
 
 install:
 	mkdir -p $(LIBDIR)
@@ -35,6 +35,12 @@ uninstall:
 debug:
 	$(CC) -c -o cspl.o cspl.c $(DBGCFLAGS)
 	$(AR) libcspl-g.a cspl.o
+
+examples:
+	$(MAKE) debug
+	$(CC) examples/basics/basics.c -o examples/basics/basics -L./ -lcspl-g -g
+	$(CC) examples/writing/writing.c -o examples/writing/writing -L./ -lcspl-g -g
+	rm -f examples/writing/db_new.spl
 
 test:
 	$(MAKE) debug

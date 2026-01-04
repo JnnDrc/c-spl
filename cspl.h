@@ -63,6 +63,7 @@ cspl_t* cspl_get_parse(cspl_t* cspl, const char* key);
 char* cspl_get(cspl_t* cspl, const char* key);
 // get the value of a specified key and return a malloced copy of it (NEED TO BE FREED LATER)
 char* cspl_getdup(cspl_t* cspl, const char* key);
+
 // get the value of the specified key and converts to int
 int cspl_geti(cspl_t* cspl, const char* key);
 // get the value of the specified key and converts to double
@@ -76,7 +77,8 @@ char* cspl_getarr(cspl_t* cspl, const char* key, int index);
 
 // Save the file changes
 // WARN: FILE CHANGES WIPE OUT BLANK LINES
-int cspl_write(cspl_t* cspl, const char* spl);
+int cspl_write(cspl_t* cspl, const char* filename);
+int cspl_write_file(cspl_t* cspl, FILE* file);
 // Change the value of an entry
 void cspl_edit(cspl_t* cspl, const char* key, const char* nval);
 // Adds the entry at the bottom of the file

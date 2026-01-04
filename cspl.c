@@ -97,6 +97,21 @@ static int parse(char* line, cspl_t** head, cspl_t** tail){
     return CSPL_OK;
 }
 
+static int write(FILE* f, cspl_t* cspl){
+    int w = 0;
+    cspl_t* cur = cspl;
+    while(cur){
+        cspl_t *next = cur->next;
+
+        if(!cur->key) w += fprintf(f,"%s\n",cur->value); // comment
+        else w += fprintf(f,"%s: %s\n",cur->key,cur->value); // kv pair
+
+        cur = next;
+    }
+
+    return w;
+}
+
 cspl_t* cspl_parse(const char* filename){
     if(!filename){
         ___CSPL_ERR = CSPL_NULL_POINTER;
@@ -186,7 +201,7 @@ cspl_t* cspl_get_parse(cspl_t* cspl, const char* key){
 }
 
 char* cspl_get(cspl_t* cspl, const char* key){
-    if(!cspl){
+    if(!cspl || !key){
         ___CSPL_ERR = CSPL_NULL_POINTER;
         return NULL;
     }
@@ -270,7 +285,7 @@ char* cspl_getarr(cspl_t* cspl, const char* key, int index){
 }
 
 int cspl_write(cspl_t* cspl, const char* spl){
-    if(!cspl){
+    if(!cspl || !spl){
         ___CSPL_ERR = CSPL_NULL_POINTER;
         return 0;
     }
@@ -281,22 +296,20 @@ int cspl_write(cspl_t* cspl, const char* spl){
         return 0;
     }
 
-    int w = 0;
-    cspl_t* cur = cspl;
-    while(cur){
-        cspl_t *next = cur->next;
+    return write(f,cspl);
+}
 
-        if(!cur->key) w += fprintf(f,"%s\n",cur->value); // comment
-        else w += fprintf(f,"%s: %s\n",cur->key,cur->value); // kv pair
-
-        cur = next;
+int cspl_write_file(cspl_t* cspl, FILE* file){
+    if(!cspl || !file){
+        ___CSPL_ERR = CSPL_NULL_POINTER;
+        return 0;
     }
 
-    return w;
+    return write(file,cspl);
 }
 
 void cspl_edit(cspl_t* cspl, const char* key, const char* nval){
-    if(!cspl){
+    if(!cspl || !key || !nval){
         ___CSPL_ERR = CSPL_NULL_POINTER;
         return;
     }
@@ -322,7 +335,7 @@ void cspl_edit(cspl_t* cspl, const char* key, const char* nval){
     return;
 }
 int cspl_add(cspl_t* cspl, const char* key, const char* val){
-    if(!cspl){
+    if(!cspl || !key || !val){
         ___CSPL_ERR = CSPL_NULL_POINTER;
         return CSPL_NULL_POINTER;
     }
@@ -356,7 +369,7 @@ int cspl_add(cspl_t* cspl, const char* key, const char* val){
     return CSPL_UNKNOWN_ERROR;
 }
 int cspl_insert(cspl_t* cspl,const char* pkey, const char* key, const char* val){
-    if(!cspl){
+    if(!cspl || !pkey || !key || !val){
         ___CSPL_ERR = CSPL_NULL_POINTER;
         return CSPL_NULL_POINTER;
     }
@@ -392,7 +405,7 @@ int cspl_insert(cspl_t* cspl,const char* pkey, const char* key, const char* val)
     return CSPL_KEY_NOT_FOUND;
 }
 void cspl_delete(cspl_t* cspl, const char* key){
-    if(!cspl){
+    if(!cspl || !key){
         ___CSPL_ERR = CSPL_NULL_POINTER;
         return;
     }
@@ -405,7 +418,7 @@ void cspl_delete(cspl_t* cspl, const char* key){
         if(cur->key){
             if(!strcmp(cur->key,key)){
                 if(prev) prev->next = next;
-                free(cur->next);
+                free(cur->key);
                 free(cur->value);
                 free(cur);
                 return;
@@ -420,7 +433,7 @@ void cspl_delete(cspl_t* cspl, const char* key){
 }
 
 bool cspl_exists(cspl_t* cspl, const char* key){
-    if(!cspl){
+    if(!cspl || !key){
         ___CSPL_ERR = CSPL_NULL_POINTER;
         return false;
     }
@@ -450,6 +463,7 @@ int cspl_err(){
     return ___CSPL_ERR;
 }
 int cspl_perr(const char* s){
+    s = s ? s : "";
     switch ((enum cspl_err)(___CSPL_ERR)) {
         case CSPL_OK:
             break;
